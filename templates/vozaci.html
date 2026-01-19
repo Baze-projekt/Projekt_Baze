@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h1>Vozači Formule 1</h1>
+
+    {% if session.role == 'admin' %}
+    <div class="admin-panel">
+        <h3 style="margin-top:0;">Dodaj Novog Vozača</h3>
+        <form action="/vozaci" method="POST">
+            <div class="form-row">
+                <input type="text" name="ime" placeholder="Ime" required>
+                <input type="text" name="prezime" placeholder="Prezime" required>
+                <input type="number" name="broj" placeholder="Broj na bolidu" required>
+            </div>
+            <div class="form-row">
+                <input type="text" name="nacionalnost" placeholder="Nacionalnost" required>
+                <input type="text" name="sifra" placeholder="Šifra (npr. HAM)" required maxlength="5">
+                <input type="date" name="datum_rodjenja" required title="Datum rođenja">
+                <select name="tim_id">
+                    {% for tim in timovi %}
+                        <option value="{{ tim.id }}">{{ tim.naziv }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn">SPREMI VOZAČA</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>Broj</th>
+                <th>Vozač</th>
+                <th>Tim</th>
+                <th>Akcije</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in vozaci %}
+            <tr>
+                <td style="font-family: 'Orbitron'; color: #e10600; font-weight: bold;">#{{ v.broj }}</td>
+                <td>{{ v.ime }} {{ v.prezime }}</td>
+                <td><span style="background: #333; padding: 3px 8px; border-radius: 4px;">{{ v.naziv_tima }}</span></td>
+                <td>
+                    {% if session.role == 'admin' %}
+                        <form action="{{ url_for('obrisi_vozaca', id=v.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Sigurno želiš obrisati vozača?');">
+                            <button type="submit" style="background: transparent; border: 1px solid #555; color: #ff4444; cursor: pointer; padding: 5px 10px; border-radius: 4px;">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </form>
+                    {% else %}
+                        <i class="fa-solid fa-lock" style="color: #555;" title="Samo za admina"></i>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

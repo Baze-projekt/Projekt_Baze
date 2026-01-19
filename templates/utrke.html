@@ -1,0 +1,164 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div style="padding: 20px 40px; max-width: 1400px; margin: 0 auto;">
+
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1 style="font-family: 'Orbitron', sans-serif; text-transform: uppercase; color: white;">
+            <i class="fa-solid fa-flag-checkered" style="color: var(--primary);"></i> F1 Kalendar
+        </h1>
+    </div>
+
+    {% if session.role == 'admin' %}
+    <div class="card" style="margin-bottom: 50px; border: 1px solid #444; background: #1f1f27; padding: 25px; border-radius: 10px;">
+        <h3 style="color: var(--primary); margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px;">
+            <i class="fa-solid fa-plus-circle"></i> Dodaj Novu Utrku
+        </h3>
+        
+        <form action="/dodaj-utrku" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+            
+            <input type="text" name="naziv" placeholder="Naziv Utrke (npr. VN Italije)" required style="padding: 12px; background: #2a2a35; border: 1px solid #444; color: white; border-radius: 4px;">
+            
+            <select name="id_staza" required style="padding: 12px; background: #2a2a35; border: 1px solid #444; color: white; border-radius: 4px;">
+                <option value="" disabled selected>-- Odaberi Stazu --</option>
+                {% for staza in staze %}
+                <option value="{{ staza.id }}">{{ staza.naziv }} ({{ staza.drzava }})</option>
+                {% endfor %}
+            </select>
+            
+            <div style="display: flex; gap: 10px;">
+                <input type="date" name="datum" required style="padding: 12px; background: #2a2a35; border: 1px solid #444; color: white; flex: 1; border-radius: 4px;">
+                
+                <select name="id_sezona" style="padding: 12px; background: #2a2a35; border: 1px solid #444; color: white; border-radius: 4px;">
+                    {% for s in sezone %}
+                    <option value="{{ s.id }}">{{ s.godina }}.</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" style="background: var(--primary); color: white; border: none; padding: 12px; font-weight: bold; cursor: pointer; grid-column: 1 / -1; border-radius: 4px; font-family: 'Orbitron'; letter-spacing: 1px;">
+                SPREMI UTRKU
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if uzivo %}
+    <div style="margin-bottom: 60px;">
+        <h2 style="color: #ff1e1e; font-family: 'Orbitron'; animation: blink 2s infinite; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-circle"></i> UTRKA U TIJEKU
+        </h2>
+        
+        {% for utrka in uzivo %}
+        <div class="card" style="border: 2px solid #ff1e1e; background: linear-gradient(45deg, #1f1f27, #2a1a1a); padding: 30px; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                <div>
+                    <h1 style="margin: 0; font-size: 2.5em; font-family: 'Orbitron';">{{ utrka.naziv }}</h1>
+                    <h3 style="color: #aaa; margin: 10px 0;">{{ utrka.naziv_staze }}</h3>
+                    <p style="font-size: 1.1em;"><i class="fa-solid fa-clock"></i> Datum: <span style="color: #ff1e1e; font-weight: bold;">{{ utrka.datum }}</span></p>
+                </div>
+                <div style="text-align: right;">
+                    {% if session.role == 'admin' %}
+                    <form action="/promijeni-status-utrke" method="POST">
+                        <input type="hidden" name="utrka_id" value="{{ utrka.id }}">
+                        <input type="hidden" name="novi_status" value="Zavrsena">
+                        <button type="submit" style="background: transparent; color: white; border: 1px solid #fff; padding: 15px 30px; cursor: pointer; font-weight: bold; border-radius: 5px;">
+                            <i class="fa-solid fa-flag-checkered"></i> OZNAČI KAO ZAVRŠENU
+                        </button>
+                    </form>
+                    {% else %}
+                    <span style="background: #ff1e1e; color: white; padding: 10px 20px; font-weight: bold; border-radius: 4px; font-size: 1.2em;">LIVE TIMING</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <h2 style="color: #00bcd4; border-bottom: 2px solid #00bcd4; padding-bottom: 10px; margin-top: 40px;">
+        <i class="fa-solid fa-calendar-days"></i> Buduće Utrke
+    </h2>
+    <div style="overflow-x: auto; background: #1f1f27; border-radius: 10px; padding: 10px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #2a2a35; color: #bbb;">
+                    <th style="padding: 15px; text-align: left;">Datum</th>
+                    <th style="padding: 15px; text-align: left;">Grand Prix</th>
+                    <th style="padding: 15px; text-align: left;">Staza</th>
+                    <th style="padding: 15px; text-align: center;">Info</th>
+                    {% if session.role == 'admin' %} <th style="padding: 15px; text-align: center;">Akcija</th> {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for utrka in najavljene %}
+                <tr style="border-bottom: 1px solid #333;">
+                    <td style="padding: 15px; color: #00bcd4; font-weight: bold;">{{ utrka.datum }}</td>
+                    <td style="padding: 15px; font-weight: bold;">
+                        {{ utrka.naziv }}
+                        <div style="font-size: 0.8em; color: #666; font-weight: normal; margin-top: 5px;">{{ utrka.drzava }}</div>
+                    </td>
+                    <td style="padding: 15px;">{{ utrka.naziv_staze }}</td>
+                    <td style="padding: 15px; text-align: center; color: #aaa;">
+                        {{ utrka.duljina_km }} km<br>
+                    </td>
+                    
+                    {% if session.role == 'admin' %}
+                    <td style="padding: 15px; text-align: center;">
+                        <form action="/promijeni-status-utrke" method="POST">
+                            <input type="hidden" name="utrka_id" value="{{ utrka.id }}">
+                            <input type="hidden" name="novi_status" value="Traje">
+                            <button type="submit" title="Pokreni utrku" style="background: #4caf50; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                                <i class="fa-solid fa-play"></i> START
+                            </button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr><td colspan="5" style="padding: 30px; text-align: center; color: #666;">Nema najavljenih utrka.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h2 style="color: #888; border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: 60px;">
+        <i class="fa-solid fa-flag-checkered"></i> Završene Utrke
+    </h2>
+    <div style="overflow-x: auto; opacity: 0.6; background: #1f1f27; border-radius: 10px; padding: 10px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #1a1a20; color: #666;">
+                    <th style="padding: 15px; text-align: left;">Datum</th>
+                    <th style="padding: 15px; text-align: left;">Grand Prix</th>
+                    <th style="padding: 15px; text-align: left;">Staza</th>
+                    <th style="padding: 15px;">Država</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for utrka in zavrsene %}
+                <tr style="border-bottom: 1px solid #222;">
+                    <td style="padding: 15px;">{{ utrka.datum }}</td>
+                    <td style="padding: 15px; color: #aaa;">{{ utrka.naziv }}</td>
+                    <td style="padding: 15px; color: #666;">{{ utrka.naziv_staze }}</td>
+                    <td style="padding: 15px; text-align: center;"><i class="fa-solid fa-earth-americas"></i> {{ utrka.drzava }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" style="padding: 20px; text-align: center; color: #666;">Još nema završenih utrka.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<style>
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+</style>
+
+{% endblock %}

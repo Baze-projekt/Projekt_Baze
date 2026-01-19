@@ -1,0 +1,175 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="stats-container" style="display: flex; flex-direction: column; gap: 40px; padding-bottom: 50px;">
+    
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="font-family: 'Orbitron', sans-serif; color: var(--primary); text-transform: uppercase;">
+            <i class="fa-solid fa-chart-line"></i> Statistika Sezone
+        </h1>
+    </div>
+
+    <div class="card">
+        <h3 style="border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px;">
+            <i class="fa-solid fa-users-gear"></i> Poredak Konstruktora
+        </h3>
+        
+        <div style="display: flex; gap: 30px; flex-wrap: wrap; align-items: flex-start;">
+             <div style="flex: 1; min-width: 300px;">
+                 <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #2a2a35; color: #bbb;">
+                            <th style="padding: 12px;">Poz</th>
+                            <th style="padding: 12px; text-align: left;">Tim</th>
+                            <th style="padding: 12px;">Bodovi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in timovi %}
+                        <tr style="border-bottom: 1px solid #333;">
+                            <td style="padding: 12px;">{{ loop.index }}.</td>
+                            <td style="padding: 12px; font-weight: bold;">{{ t.naziv }}</td>
+                            <td style="padding: 12px; font-weight: bold; color: var(--primary);">{{ t.ukupno_bodova }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+             <div style="flex: 2; min-width: 300px; height: 300px;">
+                <canvas id="timoviChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        
+        <div class="card" style="flex: 2; min-width: 400px;">
+             <h3 style="border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px;">
+                <i class="fa-solid fa-trophy"></i> Top 10 Vozača
+            </h3>
+             <div style="height: 250px; margin-bottom: 30px;">
+                <canvas id="vozaciChart"></canvas>
+            </div>
+
+            <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #2a2a35; color: #bbb;">
+                        <th style="padding: 8px;">Poz</th>
+                        <th style="padding: 8px; text-align: left;">Vozač</th>
+                        <th style="padding: 8px; text-align: right;">Bodovi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vozaci[:10] %}
+                    <tr style="border-bottom: 1px solid #333; font-size: 0.9em;">
+                        <td style="padding: 8px;">{{ v.mjesto }}.</td>
+                        <td style="padding: 8px;">{{ v.ime }} {{ v.prezime }} <span style="color:#666">({{ v.tim }})</span></td>
+                        <td style="padding: 8px; text-align: right; font-weight: bold;">{{ v.bodovi }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if vozaci|length > 10 %}
+                    <tr><td colspan="3" style="padding: 10px; text-align: center; color: #666;">... i još {{ vozaci|length - 10 }} vozača ...</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card" style="flex: 1; min-width: 300px; border: 1px solid #442222;">
+            <h3 style="padding: 15px; color: #ff4444; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Disciplina (Top 5)
+            </h3>
+            <p style="padding: 15px; font-size: 0.8em; color: #888; margin-bottom: 15px;">Vozači s najviše zabilježenih kazni ove sezone.</p>
+            
+            <ul style="list-style: none; padding: 0;">
+                {% for k in kazne %}
+                <li style="padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; background: rgba(255, 0, 0, 0.05);">
+                    <div>
+                        <span style="font-weight: bold; display: block;">{{ k.ime }} {{ k.prezime }}</span>
+                        <span style="font-size: 0.8em; color: #666;">{{ k.tim }}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="display: block; color: #ff4444; font-weight: bold; font-size: 1.2em;">{{ k.broj_kazni }}</span>
+                        <span style="font-size: 0.7em; color: #aaa; text-transform: uppercase;">kazni</span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+<script id="data-timovi-labels" type="application/json">{{ timovi_labels | tojson | safe }}</script>
+<script id="data-timovi-bodovi" type="application/json">{{ timovi_bodovi | tojson | safe }}</script>
+<script id="data-vozaci-labels" type="application/json">{{ vozaci_labels | tojson | safe }}</script>
+<script id="data-vozaci-bodovi" type="application/json">{{ vozaci_bodovi | tojson | safe }}</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    function getJsonData(id) {
+        return JSON.parse(document.getElementById(id).textContent);
+    }
+
+    const timoviLabels = getJsonData('data-timovi-labels');
+    const timoviBodovi = getJsonData('data-timovi-bodovi');
+    const vozaciLabels = getJsonData('data-vozaci-labels');
+    const vozaciBodovi = getJsonData('data-vozaci-bodovi');
+
+    Chart.defaults.color = '#aaa';
+    Chart.defaults.borderColor = '#333';
+    Chart.defaults.font.family = "'Roboto', sans-serif";
+
+    const ctxTimovi = document.getElementById('timoviChart').getContext('2d');
+    new Chart(ctxTimovi, {
+        type: 'bar',
+        data: {
+            labels: timoviLabels,
+            datasets: [{
+                label: 'Ukupno Bodova',
+                data: timoviBodovi,
+                backgroundColor: 'rgba(0, 188, 212, 0.7)',
+                borderColor: 'rgba(0, 188, 212, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { beginAtZero: true, grid: { color: '#333' } },
+                y: { grid: { display: false }, ticks: { color: '#fff' } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    const ctxVozaci = document.getElementById('vozaciChart').getContext('2d');
+    new Chart(ctxVozaci, {
+        type: 'bar',
+        data: {
+            labels: vozaciLabels,
+            datasets: [{
+                label: 'Bodovi',
+                data: vozaciBodovi,
+                backgroundColor: 'rgba(255, 152, 0, 0.7)',
+                borderColor: 'rgba(255, 152, 0, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#333' } },
+                x: { grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+</script>
+{% endblock %}

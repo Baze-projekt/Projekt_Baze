@@ -1,0 +1,30 @@
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_DB=formula
+    depends_on:
+      - db
+    volumes:
+      - .:/app 
+
+  db:
+    image: mysql:8.0
+    container_name: f1_mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: formula
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./formula.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  mysql_data:

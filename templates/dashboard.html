@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h1 style="border-bottom: 2px solid #e10600; padding-bottom: 10px; margin-bottom: 30px;">
+        Pregled Sezone
+    </h1>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+        {% for tim in timovi %}
+        <div style="background: #1f1f27; border-radius: 10px; overflow: hidden; transition: transform 0.2s;">
+            <img src="https://placehold.co/600x350/1f1f27/e10600?text={{ tim.naziv }}" style="width: 100%; height: 160px; object-fit: cover;">
+            
+            <div style="padding: 15px;">
+                <h3 style="color: #e10600; margin: 0 0 10px 0;">{{ tim.naziv }}</h3>
+                <div style="font-size: 13px; color: #bbb; margin-bottom: 15px;">
+                    <i class="fa-solid fa-map-pin"></i> {{ tim.baza }}<br>
+                    <i class="fa-solid fa-sack-dollar"></i> Budžet: {{ "{:,.0f}".format(tim.budzet) }} €
+                </div>
+
+                <form action="/promijeni-budzet" method="POST" style="display:flex; gap:5px;">
+                    <input type="hidden" name="tim_id" value="{{ tim.id }}">
+                    <input type="number" name="iznos" placeholder="Novi budžet" required style="width: 100px; padding: 5px;">
+                    <button type="submit" style="background: #e10600; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                        <i class="fa-solid fa-save"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h3 style="margin-top: 50px;"><i class="fa-solid fa-terminal"></i> Sistemski Logovi</h3>
+    <div style="background: #1f1f27; padding: 20px; border-radius: 10px;">
+        {% for log in logovi %}
+            <div style="border-bottom: 1px solid #333; padding: 8px 0; font-family: monospace; color: #00ff9d;">
+                [{{ log.vrijeme }}] <b>{{ log.akcija }}</b>: {{ log.poruka }}
+            </div>
+        {% else %}
+            <p>Nema zapisa.</p>
+        {% endfor %}
+    </div>
+
+{% endblock %}

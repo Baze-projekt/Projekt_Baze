@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Manager</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #e10600; --dark: #15151e; --card-bg: #1f1f27; --text: #f3f3f3; }
+        body { margin: 0; font-family: 'Roboto', sans-serif; background-color: #101014; color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 240px; background: var(--dark); display: flex; flex-direction: column; padding: 20px; border-right: 1px solid #333; }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 22px; color: var(--primary); font-weight: bold; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
+        .user-info { font-size: 13px; color: #888; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        .user-info span { color: white; font-weight: bold; text-transform: uppercase; }
+        .menu a { text-decoration: none; color: #aaa; padding: 12px; display: flex; align-items: center; gap: 15px; border-radius: 8px; transition: 0.3s; margin-bottom: 5px; }
+        .menu a:hover, .menu a.active { background-color: var(--primary); color: white; }
+        .logout-btn { margin-top: auto; color: #aaa; text-decoration: none; padding: 10px; transition: 0.3s; }
+        .logout-btn:hover { color: white; }
+        .main { flex: 1; padding: 30px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; margin-top: 20px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #333; }
+        th { background-color: #252530; color: #e10600; font-size: 12px; text-transform: uppercase; }
+        tr:hover { background-color: #2b2b36; }
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .alert-success { background: #155724; color: #d4edda; }
+        .alert-danger { background: #721c24; color: #f8d7da; border: 1px solid #f5c6cb; }
+        .admin-panel { background: #252530; padding: 20px; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 30px; }
+        .form-row { display: flex; gap: 10px; margin-top: 10px; }
+        input, select { background: #101014; border: 1px solid #444; color: white; padding: 10px; border-radius: 4px; flex: 1; }
+        .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #ff1e1e; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo"><i class="fa-solid fa-flag-checkered"></i> F1 MANAGER</div>
+        
+        <div class="user-info">
+            Korisnik: <span>{{ session.get('username', 'Gost') }}</span><br>
+            Rola: <span style="color: {{ 'green' if session.get('role') == 'admin' else 'orange' }}">
+                {{ session.get('role', 'N/A') }}
+            </span>
+        </div>
+
+        <div class="menu">
+            <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">
+                <i class="fa-solid fa-chart-line"></i> Dashboard
+            </a>
+            <a href="{{ url_for('vozaci') }}" class="{{ 'active' if request.endpoint == 'vozaci' else '' }}">
+                <i class="fa-solid fa-helmet-safety"></i> Vozači
+            </a>
+            <a href="{{ url_for('utrke') }}" class="{{ 'active' if request.endpoint == 'utrke' else '' }}">
+                <i class="fa-solid fa-road"></i> Kalendar Utrka
+            </a>
+            <a href="{{ url_for('statistika') }}" class="{{ 'active' if request.endpoint == 'statistika' else '' }}">
+                <i class="fa-solid fa-chart-line"></i> Statistika
+            </a>
+            {% if session.role == 'admin' %}
+            <a href="{{ url_for('transfer_page') }}" class="{{ 'active' if request.endpoint == 'transfer_page' else '' }}" style="color: #ff9800;">
+                <i class="fa-solid fa-shuffle"></i> Transferi
+            </a>
+            <a href="{{ url_for('financije') }}" class="{{ 'active' if request.endpoint == 'financije' else '' }}" style="color: #4caf50;">
+                <i class="fa-solid fa-coins"></i> Financije
+            </a>
+            {% endif %}
+        </div>
+        
+        <a href="{{ url_for('logout') }}" class="logout-btn"><i class="fa-solid fa-sign-out-alt"></i> Odjava</a>
+    </div>
+
+    <div class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>

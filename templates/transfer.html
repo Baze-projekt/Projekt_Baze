@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>Transfer Vozača (Transakcija)</h1>
+
+<div class="admin-panel">
+    <form action="/izvrsi-transfer" method="POST">
+        
+        <label>Odaberi vozača:</label>
+        <select name="vozac_id" required>
+            {% for v in vozaci %}
+                <option value="{{ v.id }}">{{ v.ime }} {{ v.prezime }} ({{ v.naziv_tima }})</option>
+            {% endfor %}
+        </select>
+
+        <label>Novi Tim:</label>
+        <select name="novi_tim_id" required>
+            {% for t in timovi %}
+                <option value="{{ t.id }}">{{ t.naziv }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Novi Bolid:</label>
+        <select name="novi_bolid_id" required>
+            {% for b in bolidi %}
+                <option value="{{ b.id }}">
+                    {{ b.model }} ({{ b.motor }}) - ID: {{ b.id }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label>Sezona:</label>
+        <select name="sezona_id" required>
+            {% for s in sezone %}
+                <option value="{{ s.id }}">{{ s.godina }}.</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn" style="background-color: #ff9800;">IZVRŠI TRANSFER</button>
+    </form>
+</div>
+{% endblock %}

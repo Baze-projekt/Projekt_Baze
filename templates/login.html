@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <title>F1 Login</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #101014; color: white; font-family: 'Roboto', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: #1f1f29; padding: 40px; border-radius: 10px; border-top: 5px solid #e10600; width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { margin-bottom: 30px; letter-spacing: 2px; font-family: 'Orbitron', sans-serif; color: #e10600; }
+        
+        input { width: 90%; padding: 12px; margin: 10px 0; background: #2b2b36; border: 1px solid #38383f; color: white; border-radius: 5px; font-size: 14px; }
+        input:focus { outline: none; border-color: #e10600; }
+        
+        button { width: 100%; padding: 12px; background: #e10600; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 20px; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; transition: 0.3s; }
+        button:hover { background: #ff1e1e; transform: scale(1.02); }
+        
+        .error { color: #ff4444; background: rgba(255, 68, 68, 0.1); padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px; border: 1px solid #ff4444; }
+        .hint { margin-top: 25px; font-size: 12px; color: #666; text-align: left; line-height: 1.6; border-top: 1px solid #333; padding-top: 15px; }
+        .hint b { color: #aaa; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2><i class="fa-solid fa-flag-checkered"></i> F1 ACCESS</h2>
+        
+        {% if error %}
+            <div class="error"><i class="fa-solid fa-circle-exclamation"></i> {{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <input type="text" name="username" placeholder="Korisničko ime" required autocomplete="off">
+            <input type="password" name="password" placeholder="Lozinka" required>
+            <button type="submit">ULAZ U BOKS</button>
+        </form>
+
+        <div class="hint">
+            <div><i class="fa-solid fa-user-shield"></i> Admin: <b>sefe</b> / <b>sifra123</b></div>
+            <div><i class="fa-solid fa-user"></i> User: <b>gost</b> / <b>gost123</b></div>
+        </div>
+    </div>
+</body>
+</html>

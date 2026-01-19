@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>Upravljanje Financijama</h1>
+<p>Unos novih troškova za timove. Baza automatski provjerava stanje budžeta.</p>
+
+<div class="admin-panel">
+    <h3 style="margin-top:0;">Novi Trošak</h3>
+    
+    <form action="/dodaj-trosak" method="POST">
+        <div class="form-row">
+            <label>Tim:</label>
+            <select name="tim_id" required>
+                {% for tim in timovi %}
+                    <option value="{{ tim.id }}">{{ tim.naziv }} (Budžet: {{ tim.budzet }} €)</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-row">
+            <label>Kategorija troška:</label>
+            <input type="text" name="kategorija" placeholder="npr. Razvoj motora, Plaće, Logistika" required>
+        </div>
+
+        <div class="form-row">
+            <label>Iznos (€):</label>
+            <input type="number" step="0.01" name="iznos" placeholder="Iznos troška" required>
+            
+            <label>Sezona:</label>
+            <select name="sezona" required style="width: 120px;">
+                {% for s in sezone %}
+                    <option value="{{ s.id }}">{{ s.godina }}.</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn" style="background-color: #e10600;">PROKNJIŽI TROŠAK</button>
+    </form>
+</div>
+{% endblock %}
