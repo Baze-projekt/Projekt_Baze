@@ -1400,11 +1400,8 @@ DELIMITER ;
 
 -- ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
+-- ---------------------------------------------------------
 # REA
-
 
 -- 1) Vozači bez ijedne kazne u sezoni
 
@@ -1426,7 +1423,8 @@ DELIMITER ;
 DROP VIEW IF EXISTS ucinkovitost_timova;
 
 CREATE VIEW ucinkovitost_timova AS
-SELECT tim.id AS id_tim, tim.naziv AS tim, sezona.id AS id_sezona, sezona.godina, tim.budzet, SUM(rezultat.bodovi) AS ukupni_bodovi,
+SELECT tim.id AS id_tim, tim.naziv AS tim, sezona.id AS id_sezona, sezona.godina, tim.budzet, 
+		SUM(rezultat.bodovi) AS ukupni_bodovi,
 		SUM(
 			CASE 
 				WHEN rezultat.bodovi = 25 THEN 1 
@@ -1448,14 +1446,14 @@ SELECT tim.id AS id_tim, tim.naziv AS tim, sezona.id AS id_sezona, sezona.godina
 
 
 
-
-
 -- 3) VIEW: Detaljni poredak po utrci
+
 DROP VIEW IF EXISTS poredak_utrke;
 
 CREATE VIEW poredak_utrke AS
-SELECT utrka.id AS id_utrka, utrka.naziv AS utrka, vozac.id AS id_vozac, vozac.ime, vozac.prezime, tim.naziv AS tim, rezultat.vrijeme, rezultat.bodovi, 
-			COUNT(rezultat2.id) + 1 AS pozicija, IFNULL(SUM(kazna.sekunde), 0) AS kaznene_sekunde
+SELECT utrka.id AS id_utrka, utrka.naziv AS utrka, vozac.id AS id_vozac, vozac.ime, vozac.prezime, 
+	   tim.naziv AS tim, rezultat.vrijeme, rezultat.bodovi, 
+	   COUNT(rezultat2.id) + 1 AS pozicija, IFNULL(SUM(kazna.sekunde), 0) AS kaznene_sekunde
 	FROM rezultat
 		JOIN utrka ON utrka.id = rezultat.id_utrka
 		JOIN vozac_bolid ON vozac_bolid.id = rezultat.id_vozac_bolid
@@ -1484,7 +1482,39 @@ SELECT utrka.id AS id_utrka, utrka.naziv AS utrka, vozac.id AS id_vozac, vozac.i
 		rezultat.vrijeme,
 		rezultat.bodovi;
 
--- 4) OKIDAČ: provjera sudjelovanja natjecatelja po id-u prije unosa rezultata
+
+
+-- 4) VIEW: Vozači po najvećim brojem kaznenih bodova u sezoni
+
+DROP VIEW IF EXISTS top_vozaci_po_kaznama;
+
+CREATE VIEW top_vozaci_po_kaznama AS
+SELECT vozac.id AS id_vozac, vozac.ime, vozac.prezime, tim.naziv AS tim, COUNT(kazna.id) AS broj_kazni,
+    IFNULL(SUM(kazna.sekunde),0) AS ukupno_sekundi, utrka.id_sezona
+	FROM vozac
+		JOIN tim ON tim.id = vozac.id_tim
+		JOIN vozac_bolid ON vozac_bolid.id_vozac = vozac.id
+		JOIN sudjelovanje ON sudjelovanje.id_vozac_bolid = vozac_bolid.id
+		JOIN utrka ON utrka.id = sudjelovanje.id_utrka
+		LEFT JOIN kazna ON kazna.id_sudjelovanje = sudjelovanje.id
+	GROUP BY vozac.id, tim.naziv, utrka.id_sezona;
+
+
+-- 5) VIEW: sezona u državama (broj utrka u državi)
+
+DROP VIEW IF EXISTS sezona_u_drzavama;
+
+CREATE VIEW sezona_u_drzavama AS
+SELECT utrka.id_sezona, staza.drzava, COUNT(utrka.id) AS broj_utrka
+	FROM utrka
+	JOIN staza ON staza.id = utrka.id_staza
+	GROUP BY utrka.id_sezona, staza.drzava;
+
+
+
+
+-- 6) OKIDAČ: provjera sudjelovanja natjecatelja po id-u prije unosa rezultata
+
 DROP TRIGGER IF EXISTS bi_provjera_sudjelovanja;
 
 DELIMITER //
@@ -1508,7 +1538,9 @@ END//
 DELIMITER ;
 
 
--- 5) FUNKCIJA: prosječne kaznene sekunde vozača po utrci u sezoni
+
+-- 7) FUNKCIJA: prosječne kaznene sekunde vozača po utrci u sezoni
+
 DROP FUNCTION IF EXISTS prosjek_kazni_po_utrci_vozaca;
 
 DELIMITER //
@@ -1545,8 +1577,8 @@ DELIMITER ;
 
 
 
+-- 8) FUNKCIJA: postotak sprint utrka u sezoni za vozača
 
--- 6) FUNKCIJA: postotak sprint utrka u sezoni za vozača
 DROP FUNCTION IF EXISTS postotak_sprint_utrka_vozaca;
 
 DELIMITER //
@@ -1579,36 +1611,43 @@ END//
 DELIMITER ;
 
 
--- 7) VIEW: Vozači po najvećim brojem kaznenih bodova u sezoni
 
 
+-- 9) PROCEDURA: Prosječna kazna po utrci za tim po sezoni
 
-CREATE OR REPLACE VIEW view_top_vozaci_po_kaznama AS
-SELECT
-    vozac.id AS id_vozac,
-    vozac.ime,
-    vozac.prezime,
-    tim.naziv AS tim,
-    COUNT(kazna.id) AS broj_kazni,
-    IFNULL(SUM(kazna.sekunde),0) AS ukupno_sekundi,
-    utrka.id_sezona
-FROM vozac
-JOIN tim ON tim.id = vozac.id_tim
-JOIN vozac_bolid ON vozac_bolid.id_vozac = vozac.id
-JOIN sudjelovanje ON sudjelovanje.id_vozac_bolid = vozac_bolid.id
-JOIN utrka ON utrka.id = sudjelovanje.id_utrka
-LEFT JOIN kazna ON kazna.id_sudjelovanje = sudjelovanje.id
-GROUP BY vozac.id, tim.naziv, utrka.id_sezona;
+DROP PROCEDURE IF EXISTS prosjek_kazni_tima;
 
+DELIMITER //
 
+CREATE PROCEDURE prosjek_kazni_tima(
+    IN p_id_tim INT,
+    IN p_id_sezona INT,
+    OUT p_broj_utrka INT,
+    OUT p_ukupne_kazne DECIMAL(10,2),
+    OUT p_prosjek DECIMAL(8,2)
+)
+BEGIN
+    SELECT 
+        COUNT(DISTINCT utrka.id),
+        IFNULL(SUM(kazna.sekunde), 0)
+    INTO 
+        p_broj_utrka,
+        p_ukupne_kazne
+    FROM tim
+        JOIN vozac ON vozac.id_tim = tim.id
+        JOIN vozac_bolid ON vozac_bolid.id_vozac = vozac.id
+        JOIN sudjelovanje ON sudjelovanje.id_vozac_bolid = vozac_bolid.id
+        JOIN utrka ON utrka.id = sudjelovanje.id_utrka
+        LEFT JOIN kazna ON kazna.id_sudjelovanje = sudjelovanje.id
+    WHERE tim.id = p_id_tim
+      AND utrka.id_sezona = p_id_sezona;
 
--- 8) VIEW: sezona u državama (broj utrka u državi)
+    IF p_broj_utrka = 0 THEN
+        SET p_prosjek = 0;
+    ELSE
+        SET p_prosjek = ROUND(p_ukupne_kazne / p_broj_utrka, 2);
+    END IF;
+END//
 
-CREATE OR REPLACE VIEW view_sezona_u_drzavama AS
-SELECT
-    u.id_sezona,
-    s.drzava,
-    COUNT(u.id) AS broj_utrka
-FROM utrka u
-JOIN staza s ON s.id = u.id_staza
-GROUP BY u.id_sezona, s.drzava;
+DELIMITER ;
+
