@@ -394,7 +394,7 @@ def statistika():
 
     sql_kazne = """
         SELECT ime, prezime, tim, broj_kazni, ukupno_sekundi
-        FROM view_top_vozaci_po_kaznama
+        FROM top_vozaci_po_kaznama
         WHERE id_sezona = (SELECT MAX(id) FROM sezona)
         ORDER BY broj_kazni DESC
         LIMIT 5;
@@ -414,4 +414,5 @@ def statistika():
                            vozaci_bodovi=vozaci_bodovi)
 
 if __name__ == '__main__':
+
     app.run(host='0.0.0.0', port=5000, debug=True)
